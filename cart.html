@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>سلة المشتريات - مـتـجـري</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+    body { font-family: 'Tajawal', sans-serif; background-color: #f8f9fa; padding-bottom: 50px; }
+    .checkout-container { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">🛍️ مـتـجـري</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-7">
+        <div class="checkout-container">
+          <h4 class="fw-bold mb-4">المنتجات المختارة</h4>
+          <div id="cartContent"></div>
+          <hr>
+          <h5 class="text-end fw-bold">الإجمالي: <span id="totalPrice" class="text-primary">0</span> $</h5>
+        </div>
+      </div>
+
+      <div class="col-md-5">
+        <div class="checkout-container">
+          <h4 class="fw-bold mb-4">بيانات التوصيل</h4>
+          <form id="orderForm">
+            <div class="mb-3"><label class="form-label">الاسم</label><input type="text" id="custName" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label">رقم الهاتف</label><input type="tel" id="custPhone" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label">العنوان بالتفصيل</label><textarea id="custAddress" class="form-control" rows="3" required></textarea></div>
+            <button type="submit" id="submitBtn" class="btn btn-primary w-100 btn-lg rounded-pill">إرسال الطلب</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function loadCart() {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      const container = document.getElementById('cartContent');
+      let total = 0;
+      
+      if(cart.length === 0) {
+        container.innerHTML = '<p class="text-center">السلة فارغة</p>';
+        return;
+      }
+
+      let html = '<ul class="list-group list-group-flush">';
+      cart.forEach(item => {
+        total += item.price;
+        html += `<li class="list-group-item d-flex justify-content-between align-items-center">${item.name} <span>${item.price} $</span></li>`;
+      });
+      html += '</ul>';
+      container.innerHTML = html;
+      document.getElementById('totalPrice').innerText = total;
+    }
+
+    document.getElementById('orderForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      
+      const orderData = {
+        customerName: document.getElementById('custName').value,
+        phone: document.getElementById('custPhone').value,
+        address: document.getElementById('custAddress').value,
+        cart: cart,
+        total: document.getElementById('totalPrice').innerText
+      };
+
+      btn.innerText = "جاري الإرسال...";
+      btn.disabled = true;
+
+      try {
+        // !!! مـلاحـظـة هـامـة !!!
+        // بمجرد رفع السيرفر على Render، استبدل الرابط اللي تحت برابط Render الجديد
+        const serverUrl = 'https://رابط-السيرفر-بتاعك.onrender.com/api/order'; 
+        
+        const res = await fetch(serverUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+
+        if(res.ok) {
+          alert('تم إرسال الطلب بنجاح!');
+          localStorage.removeItem('cart');
+          window.location.href = 'index.html';
+        }
+      } catch (err) {
+        alert('حدث خطأ، تأكد من أن السيرفر يعمل أونلاين.');
+      } finally {
+        btn.innerText = "إرسال الطلب";
+        btn.disabled = false;
+      }
+    });
+
+    window.onload = loadCart;
+  </script>
+</body>
+</html>

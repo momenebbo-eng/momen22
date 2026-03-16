@@ -11,13 +11,12 @@ const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'momenebbo@gmail.com',
-        pass: 'flzo sljv eork zckm'
+        pass: 'flzo sljv eork zckm' 
     }
 });
 
 app.post('/api/order', (req, res) => {
     const { customerName, phone, address, cart, total } = req.body;
-    
     const cartDetails = cart.map(item => `- ${item.name} (${item.price}$)`).join('\n');
 
     const mailOptions = {
@@ -29,17 +28,15 @@ app.post('/api/order', (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            console.log("❌ فشل الإرسال:", error);
+            console.log(error);
             return res.status(500).json({ status: "error" });
         }
-        console.log("✅ الطلب وصل لإيميلك بنجاح!");
         res.status(200).json({ status: "success" });
     });
 });
 
-// لاحظ غيرنا المنفذ لـ 5000 لتجنب التعارض
-const PORT = 5000;
+// تعديل مهم للرفع أونلاين
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`🚀 السيرفر شغال تمام على: http://localhost:${PORT}`);
-    console.log(`⚠️ سيب الشاشة دي مفتوحة متقفلهاش!`);
+    console.log(`Server is running on port ${PORT}`);
 });
