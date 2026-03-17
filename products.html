@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>المنتجات - متجري</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    /* شريط التنقل الموحد (نفس index.html) */
+    .navbar {
+      background: rgba(67, 97, 238, 0.95) !important;
+      backdrop-filter: blur(10px);
+      padding: 15px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .btn-rounded {
+      border-radius: 50px;
+      padding: 10px 25px;
+      font-weight: bold;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 5px 15px;
+      border-radius: 50px;
+      color: white;
+      cursor: pointer;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .user-box:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #ffc107;
+    }
+
+    .hidden { display: none !important; }
+
+    /* تنسيق كروت المنتجات */
+    .product-card {
+      transition: 0.3s;
+      border: none;
+      border-radius: 20px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .product-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+    }
+
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .cat-btn {
+      min-width: 110px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold fs-3" href="index.html"><i class="bi bi-bag-heart-fill"></i> مـتـجـري</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="index.html">الرئيسية</a></li>
+          <li class="nav-item"><a class="nav-link active" href="products.html">المنتجات</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">من نحن</a></li>
+          <li class="nav-item"><a class="nav-link" href="contact.html">اتصل بنا</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+          
+          <div id="authLinks" class="d-flex gap-2">
+            <a href="login.html" class="btn btn-outline-light btn-rounded btn-sm">دخول</a>
+            <a href="register.html" class="btn btn-light btn-rounded btn-sm text-primary">حساب جديد</a>
+          </div>
+
+          <a href="profile.html" id="userBox" class="user-box hidden">
+            <i class="bi bi-person-circle"></i>
+            <span id="userNameDisplay">جاري التحميل...</span>
+          </a>
+
+          <a href="cart.html" class="btn btn-primary position-relative rounded-circle p-2 ms-2 shadow-sm border-light">
+            <i class="bi bi-cart3"></i>
+            <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="py-4 bg-white shadow-sm mb-4">
+    <div class="container">
+      <div class="row g-2 justify-content-center mb-3">
+        <div class="col-auto"><button class="btn btn-primary rounded-pill cat-btn" onclick="filterByCategory('all')">الكل</button></div>
+        <div class="col-auto"><button class="btn btn-outline-primary rounded-pill cat-btn" onclick="filterByCategory('إلكترونيات')">إلكترونيات</button></div>
+        <div class="col-auto"><button class="btn btn-outline-primary rounded-pill cat-btn" onclick="filterByCategory('أزياء')">أزياء</button></div>
+        <div class="col-auto"><button class="btn btn-outline-primary rounded-pill cat-btn" onclick="filterByCategory('منزل')">منزل</button></div>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-0 rounded-start-pill"><i class="bi bi-search"></i></span>
+            <input type="text" id="searchInput" class="form-control border-0 bg-light rounded-end-pill" placeholder="ابحث عن منتج..." oninput="filterByText()">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container mb-5">
+    <div id="productsGrid" class="row g-4">
+      </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlOn_7ErG74KXYhM25LApsZATjXA3PE-M",
+      authDomain: "mystore-6fd57.firebaseapp.com",
+      projectId: "mystore-6fd57",
+      storageBucket: "mystore-6fd57.firebasestorage.app",
+      messagingSenderId: "1075846308469",
+      appId: "1:1075846308469:web:3d097e4a3064ab33368e3c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+
+    window.isUserLoggedIn = false; // متغير عالمي لفحص الدخول عند الإضافة للسلة
+
+    onAuthStateChanged(auth, (user) => {
+      const authLinks = document.getElementById('authLinks');
+      const userBox = document.getElementById('userBox');
+      const nameDisp = document.getElementById('userNameDisplay');
+
+      if (user) {
+        window.isUserLoggedIn = true;
+        authLinks.classList.add('hidden');
+        userBox.classList.remove('hidden');
+        nameDisp.innerText = user.displayName || "الملف الشخصي";
+      } else {
+        window.isUserLoggedIn = false;
+        authLinks.classList.remove('hidden');
+        userBox.classList.add('hidden');
+      }
+    });
+  </script>
+
+  <script>
+    const products = [
+      { id: 1, name: "ساعة ابل الذكية", price: 299, category: "إلكترونيات", img: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400" },
+      { id: 2, name: "سماعات سوني", price: 120, category: "إلكترونيات", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400" },
+      { id: 3, name: "حذاء رياضي نايك", price: 85, category: "أزياء", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400" },
+      { id: 4, name: "نظارة شمسية", price: 40, category: "أزياء", img: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400" },
+      { id: 5, name: "حقيبة سفر فاخرة", price: 110, category: "منزل", img: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400" },
+      { id: 6, name: "طقم أواني طهي", price: 95, category: "منزل", img: "https://images.unsplash.com/photo-1584990333910-efed3a015d80?w=400" },
+      { id: 7, name: "كاميرا ديجيتال", price: 550, category: "إلكترونيات", img: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400" }
+    ];
+
+    function displayProducts(items) {
+      const grid = document.getElementById('productsGrid');
+      if(items.length === 0) {
+          grid.innerHTML = '<div class="col-12 text-center my-5"><h3>لا توجد نتائج مطابقة</h3></div>';
+          return;
+      }
+      grid.innerHTML = items.map(p => `
+        <div class="col-md-4 col-lg-3">
+          <div class="card h-100 product-card shadow-sm">
+            <a href="product-details.html?name=${encodeURIComponent(p.name)}&price=${p.price}&img=${encodeURIComponent(p.img)}">
+              <img src="${p.img}" class="card-img-top" alt="${p.name}">
+            </a>
+            <div class="card-body text-center">
+              <span class="badge bg-light text-primary mb-2">${p.category}</span>
+              <h5 class="fw-bold card-title">${p.name}</h5>
+              <p class="text-primary fw-bold fs-5">${p.price} $</p>
+              <button class="btn btn-primary w-100 rounded-pill" onclick="addToCart('${p.name}', ${p.price}, '${p.img}')">
+                <i class="bi bi-cart-plus"></i> أضف للسلة
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterByCategory(cat) {
+      if (cat === 'all') displayProducts(products);
+      else displayProducts(products.filter(p => p.category === cat));
+      
+      // تحديث شكل الأزرار
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+          btn.classList.replace('btn-primary', 'btn-outline-primary');
+          if(btn.innerText === cat || (cat === 'all' && btn.innerText === 'الكل')) {
+              btn.classList.replace('btn-outline-primary', 'btn-primary');
+          }
+      });
+    }
+
+    function filterByText() {
+        const text = document.getElementById('searchInput').value.toLowerCase();
+        displayProducts(products.filter(p => p.name.toLowerCase().includes(text)));
+    }
+
+    function addToCart(name, price, img) {
+      if (!window.isUserLoggedIn) {
+        alert("يجب تسجيل الدخول أولاً لتتمكن من الشراء!");
+        window.location.href = "login.html";
+        return;
+      }
+      let cart = JSON.parse(localStorage.getItem('cart')) || [];
+      cart.push({ name, price, img });
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartCount();
+      
+      // إشعار بسيط
+      alert(`✅ تمت إضافة ${name} إلى سلة مشترياتك!`);
+    }
+
+    function updateCartCount() {
+      let cart = JSON.parse(localStorage.getItem('cart')) || [];
+      const countEl = document.getElementById('cartCount');
+      if(countEl) countEl.innerText = cart.length;
+    }
+
+    window.onload = () => {
+      displayProducts(products);
+      updateCartCount();
+    };
+  </script>
+</body>
+</html>
